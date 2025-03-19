@@ -1,0 +1,138 @@
+esphome:
+  name: ftx
+  friendly_name: ftx
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+#logger:
+
+api:
+  encryption:
+    key: !secret key_ftx
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  power_save_mode: LIGHT
+  output_power: 16
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+
+switch:
+  - platform: gpio
+    pin: GPIO32
+    name: "Relay 1"
+    id: lower
+    internal: false
+    restore_mode: DISABLED
+    
+  - platform: gpio
+    pin: GPIO33
+    name: "Relay 2"
+    id: higher
+    internal: false
+    restore_mode: DISABLED
+
+  - platform: gpio
+    pin: GPIO25
+    name: "Relay 3"
+    id: group
+    internal: false
+    restore_mode: DISABLED
+
+  - platform: gpio
+    pin: GPIO26
+    name: "Relay 4"
+    id: on_off
+    internal: false
+    restore_mode: DISABLED
+
+fan:
+  - platform: speed
+    id: ftx_fan_speed
+    output: fans
+    name: "Fans"
+    speed_count: 4
+    restore_mode: RESTORE_DEFAULT_ON
+
+output:
+  - platform: template
+    id: fans
+    type: float 
+    write_action:
+      - if:
+          condition:
+            lambda: return ((state == 0));
+          then:
+            # action for off
+            - switch.turn_off: lower
+            - delay: 100ms
+            - switch.turn_off: higher
+            - delay: 100ms
+            - switch.turn_off: group
+            - delay: 100ms
+            - switch.turn_on: on_off
+            - delay: 100ms
+
+      - if:
+          condition:
+            lambda: return ((state == 0.25));
+          then:
+            # action for speed 1
+            - switch.turn_off: lower
+            - delay: 100ms
+            - switch.turn_off: higher
+            - delay: 100ms
+            - switch.turn_off: group
+            - delay: 100ms
+            - switch.turn_off: on_off
+            - delay: 100ms
+            
+      - if:
+          condition:
+            lambda: return ((state == 0.5));
+          then:
+            # action for speed 2
+            - switch.turn_on: lower
+            - delay: 100ms
+            - switch.turn_off: higher
+            - delay: 100ms
+            - switch.turn_off: group
+            - delay: 100ms
+            - switch.turn_off: on_off
+            - delay: 100ms
+            
+      - if:
+          condition:
+            lambda: return ((state == 0.75));
+          then:
+            # action for speed 3
+            - switch.turn_off: lower
+            - delay: 100ms
+            - switch.turn_off: higher
+            - delay: 100ms
+            - switch.turn_on: group
+            - delay: 100ms
+            - switch.turn_off: on_off
+            - delay: 100ms
+
+      - if:
+          condition:
+            lambda: return ((state == 1));
+          then:
+            # action for speed 4
+            - switch.turn_off: lower
+            - delay: 100ms
+            - switch.turn_on: higher
+            - delay: 100ms
+            - switch.turn_on: group
+            - delay: 100ms
+            - switch.turn_off: on_off
+            - delay: 100ms
